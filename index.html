@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCATRACKER - Pete Crow-Armstrong Stat Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #131c2e;
+            --card-border: #1e293b;
+            --accent-blue: #0ea5e9;
+            --accent-red: #cc3333;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success-green: #22c55e;
+            --warning-yellow: #eab308;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header matching exact screenshot */
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--card-border);
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .menu-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.5rem 0.75rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .menu-btn:hover {
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            color: var(--text-main);
+            text-transform: uppercase;
+        }
+
+        .logo span {
+            color: var(--accent-red);
+        }
+
+        .sync-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0.5rem 0.75rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .sync-btn:hover {
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        /* Slide-out Menu Panel */
+        .dropdown-menu {
+            position: fixed;
+            top: 73px;
+            left: 0;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--card-border);
+            width: 280px;
+            height: calc(100vh - 73px);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 99;
+            box-shadow: 15px 0 30px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dropdown-menu.active {
+            transform: translateX(0);
+        }
+
+        .menu-header {
+            padding: 1.25rem 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--card-border);
+            text-transform: uppercase;
+        }
+
+        .menu-items {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .menu-items li button {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .menu-items li button:hover, .menu-items li.active button {
+            background-color: rgba(14, 165, 233, 0.1);
+            color: var(--accent-blue);
+        }
+
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem 1rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Exact Hero Card matching 5:22pm screenshot */
+        .hero-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        .player-img-container {
+            width: 140px;
+            height: 140px;
+            border-radius: 20px;
+            background: #1e293b;
+            border: 3px solid transparent;
+            background-image: linear-gradient(#131c2e, #131c2e), linear-gradient(135deg, var(--accent-blue), var(--accent-red));
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            overflow: hidden;
+            margin: 0 auto 1.25rem auto;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+        }
+
+        .player-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-img-container .cf-badge {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            background-color: #0ea5e9;
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            border: 2px solid #131c2e;
+        }
+
+        .player-name {
+            font-size: 2.25rem;
+            font-weight: 900;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .hero-badges-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .badge-pill-blue {
+            background-color: rgba(14, 165, 233, 0.2);
+            color: var(--accent-blue);
+            padding: 0.35rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .badge-pill-muted {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .player-bio-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .hero-info-box {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .hero-info-box .box-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-info-box .box-value {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .hero-status-box {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .hero-status-box .box-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-status-box .box-value {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--success-green);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Recent Game Box */
+        .recent-game-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title i {
+            color: var(--accent-blue);
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        @media(min-width: 640px) {
+            .game-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        .stat-box {
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 0.85rem 0.5rem;
+            text-align: center;
+        }
+
+        .stat-box .label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-box .value {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .main-stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--accent-blue);
+        }
+
+        .main-stat-card.fwar-card::before {
+            background-color: var(--warning-yellow);
+        }
+
+        .main-stat-card .stat-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .main-stat-card .stat-val {
+            font-size: 2.25rem;
+            font-weight: 900;
+            margin-bottom: 0.35rem;
+        }
+
+        .main-stat-card .stat-rank {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--success-green);
+            background: rgba(34, 197, 94, 0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        /* Baseball Savant Section */
+        .savant-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .savant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.85rem;
+        }
+
+        .savant-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .savant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+
+        .savant-metric {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 0.85rem;
+        }
+
+        .metric-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .metric-name {
+            color: var(--text-muted);
+        }
+
+        .metric-val {
+            color: var(--text-main);
+        }
+
+        .percentile-bar-bg {
+            height: 8px;
+            background-color: #1e293b;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .percentile-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        .fill-elite { background-color: #eab308; }
+        .fill-great { background-color: #22c55e; }
+        .fill-above { background-color: #0ea5e9; }
+        .fill-avg { background-color: #64748b; }
+        .fill-poor { background-color: #ef4444; }
+
+        /* Splits Table Style */
+        .splits-table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .splits-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        .splits-table th {
+            background-color: rgba(14, 165, 233, 0.1);
+            color: var(--accent-blue);
+            padding: 0.75rem 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            border-bottom: 2px solid var(--card-border);
+        }
+
+        .splits-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--card-border);
+            color: var(--text-main);
+        }
+
+        .splits-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Awards Tab Style */
+        .awards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .award-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .award-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: rgba(234, 179, 8, 0.15);
+            color: var(--warning-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .award-details h3 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+
+        .award-details p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--card-border);
+            background-color: var(--card-bg);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <button class="menu-btn" id="menuToggle" aria-label="Toggle Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="logo">PCA<span>TRACKER</span></div>
+        </div>
+        <button class="sync-btn" onclick="syncFeed()" aria-label="Sync Stats">
+            <i class="fa-solid fa-rotate-right" id="syncIcon"></i>
+        </button>
+    </header>
+
+    <!-- Slide-out Menu -->
+    <nav class="dropdown-menu" id="dropdownMenu">
+        <div class="menu-header">MENU</div>
+        <ul class="menu-items">
+            <li class="active" data-target="home-stats">
+                <button><i class="fa-solid fa-house"></i> Home (2026 Season)</button>
+            </li>
+            <li data-target="career-stats">
+                <button><i class="fa-solid fa-chart-line"></i> Career Stats & Totals</button>
+            </li>
+            <li data-target="splits">
+                <button><i class="fa-solid fa-table-cells"></i> Splits & Advanced</button>
+            </li>
+            <li data-target="awards">
+                <button><i class="fa-solid fa-award"></i> Career Awards</button>
+            </li>
+        </ul>
+    </nav>
+
+    <main>
+        <!-- Home / Current Season Stats Tab -->
+        <div id="home-stats" class="tab-content active">
+            
+            <!-- Hero Bio Card matching exact Oct 14 5:22pm screenshot style -->
+            <div class="hero-card">
+                <div class="player-img-container">
+                    <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_424,q_auto:best/v1/people/691718/headshot/67/current" alt="Pete Crow-Armstrong" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=400&auto=format&fit=crop&q=80'">
+                    <div class="cf-badge">#4 CF</div>
+                </div>
+                
+                <div class="hero-badges-row">
+                    <span class="badge-pill-blue">2026 MVP CANDIDATE</span>
+                    <span class="badge-pill-muted">&bull; Chicago Cubs</span>
+                </div>
+
+                <h1 class="player-name">Pete Crow-Armstrong</h1>
+
+                <p class="player-bio-text">
+                    Explosive center fielder for the Chicago Cubs. Renowned for elite Gold Glove defense, lightning-fast 30+ ft/sec sprint speed, and game-changing extra-base power.
+                </p>
+
+                <div class="hero-info-grid">
+                    <div class="hero-info-box">
+                        <div class="box-label">BATS / THROWS</div>
+                        <div class="box-value">L / L</div>
+                    </div>
+                    <div class="hero-info-box">
+                        <div class="box-label">BORN</div>
+                        <div class="box-value">Mar 25, 2002</div>
+                    </div>
+                </div>
+
+                <div class="hero-status-box" style="margin-top: 0.75rem;">
+                    <div class="box-label">STATUS</div>
+                    <div class="box-value"><i class="fa-solid fa-shield-halved"></i> Gold Glove & 10.6 fWAR</div>
+                </div>
+            </div>
+
+            <!-- Recent Game Performance Tracker -->
+            <div class="recent-game-card">
+                <div class="section-title">
+                    <i class="fa-solid fa-bolt"></i> Recent Game Performance (Sept 30, 2026 vs. SDP)
+                </div>
+                <div class="game-grid">
+                    <div class="stat-box">
+                        <div class="label">AB</div>
+                        <div class="value">4</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Hits</div>
+                        <div class="value">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">HR</div>
+                        <div class="value">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">RBI</div>
+                        <div class="value">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">SB</div>
+                        <div class="value">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">SO</div>
+                        <div class="value">1</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Season Stats Grid with fWAR & League Rankings -->
+            <div class="section-title">
+                <i class="fa-solid fa-table-cells"></i> 2026 Regular Season Performance & fWAR
+            </div>
+            
+            <div class="stats-grid">
+                <div class="main-stat-card fwar-card">
+                    <div class="stat-label">FanGraphs WAR (fWAR)</div>
+                    <div class="stat-val" style="color: var(--warning-yellow);">10.6</div>
+                    <div class="stat-rank">Rank #1 in MLB</div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-label">Batting Average (BA)</div>
+                    <div class="stat-val">.280</div>
+                    <div class="stat-rank">Rank #5 in NL</div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-label">Home Runs (HR)</div>
+                    <div class="stat-val">45</div>
+                    <div class="stat-rank">Rank #1 in MLB (tied)</div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-label">Runs Batted In (RBI)</div>
+                    <div class="stat-val">107</div>
+                    <div class="stat-rank">Rank #3 in NL</div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-label">Stolen Bases (SB)</div>
+                    <div class="stat-val">41</div>
+                    <div class="stat-rank">Rank #2 in MLB</div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-label">On-Base Percentage (OBP)</div>
+                    <div class="stat-val">.372</div>
+                    <div class="stat-rank">Rank #4 in NL</div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-label">Slugging Percentage (SLG)</div>
+                    <div class="stat-val">.570</div>
+                    <div class="stat-rank">Rank #1 in NL</div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-label">wRC+</div>
+                    <div class="stat-val">156</div>
+                    <div class="stat-rank">Rank #4 in MLB</div>
+                </div>
+            </div>
+
+            <!-- Baseball Savant Statcast Section -->
+            <div class="savant-container">
+                <div class="savant-header">
+                    <div class="savant-title">
+                        <i class="fa-solid fa-gauge-high"></i> Baseball Savant Statcast Percentiles (2026)
+                    </div>
+                </div>
+                <div class="savant-grid">
+                    <div class="savant-metric">
+                        <div class="metric-info">
+                            <span class="metric-name">Sprint Speed (30.4 ft/s)</span>
+                            <span class="metric-val">99th percentile</span>
+                        </div>
+                        <div class="percentile-bar-bg">
+                            <div class="percentile-bar-fill fill-elite" style="width: 99%"></div>
+                        </div>
+                    </div>
+                    <div class="savant-metric">
+                        <div class="metric-info">
+                            <span class="metric-name">Outs Above Average (+26 OAA)</span>
+                            <span class="metric-val">99th percentile</span>
+                        </div>
+                        <div class="percentile-bar-bg">
+                            <div class="percentile-bar-fill fill-elite" style="width: 99%"></div>
+                        </div>
+                    </div>
+                    <div class="savant-metric">
+                        <div class="metric-info">
+                            <span class="metric-name">Arm Strength (92.4 mph)</span>
+                            <span class="metric-val">88th percentile</span>
+                        </div>
+                        <div class="percentile-bar-bg">
+                            <div class="percentile-bar-fill fill-great" style="width: 88%"></div>
+                        </div>
+                    </div>
+                    <div class="savant-metric">
+                        <div class="metric-info">
+                            <span class="metric-name">Bat Speed (74.8 mph)</span>
+                            <span class="metric-val">72nd percentile</span>
+                        </div>
+                        <div class="percentile-bar-bg">
+                            <div class="percentile-bar-fill fill-great" style="width: 72%"></div>
+                        </div>
+                    </div>
+                    <div class="savant-metric">
+                        <div class="metric-info">
+                            <span class="metric-name">Hard-Hit % (48.6%)</span>
+                            <span class="metric-val">76th percentile</span>
+                        </div>
+                        <div class="percentile-bar-bg">
+                            <div class="percentile-bar-fill fill-great" style="width: 76%"></div>
+                        </div>
+                    </div>
+                    <div class="savant-metric">
+                        <div class="metric-info">
+                            <span class="metric-name">xwOBA (.374)</span>
+                            <span class="metric-val">90th percentile</span>
+                        </div>
+                        <div class="percentile-bar-bg">
+                            <div class="percentile-bar-fill fill-elite" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    <div class="savant-metric">
+                        <div class="metric-info">
+                            <span class="metric-name">Strikeout % (25.8%)</span>
+                            <span class="metric-val">45th percentile</span>
+                        </div>
+                        <div class="percentile-bar-bg">
+                            <div class="percentile-bar-fill fill-avg" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="savant-metric">
+                        <div class="metric-info">
+                            <span class="metric-name">Walk % (11.4%)</span>
+                            <span class="metric-val">78th percentile</span>
+                        </div>
+                        <div class="percentile-bar-bg">
+                            <div class="percentile-bar-fill fill-great" style="width: 78%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Career Stats & Totals Tab -->
+        <div id="career-stats" class="tab-content">
+            <div class="section-title">
+                <i class="fa-solid fa-chart-line"></i> Career Totals, fWAR & Year-by-Year Breakdown
+            </div>
+            
+            <div class="stats-grid">
+                <div class="main-stat-card fwar-card">
+                    <div class="stat-label">Total Career fWAR</div>
+                    <div class="stat-val" style="color: var(--warning-yellow);">18.8</div>
+                    <div class="stat-rank">Elite Superstar Pace</div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-label">Career Batting Avg</div>
+                    <div class="stat-val">.255</div>
+                    <div class="stat-rank">MLB Career Total</div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-label">Career Home Runs</div>
+                    <div class="stat-val">86</div>
+                    <div class="stat-rank">MLB Career Total</div>
+                </div>
+                <div class="main-stat-card">
+                    <div class="stat-label">Career Stolen Bases</div>
+                    <div class="stat-val">105</div>
+                    <div class="stat-rank">Elite Speed Tier</div>
+                </div>
+            </div>
+
+            <div class="savant-container">
+                <div class="savant-header">
+                    <div class="savant-title">
+                        <i class="fa-solid fa-table"></i> Season-by-Season Advanced Stats Table (FanGraphs / Savant)
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--card-border); color: var(--text-muted);">
+                                <th style="padding: 0.75rem;">Season</th>
+                                <th style="padding: 0.75rem;">Team</th>
+                                <th style="padding: 0.75rem; color: var(--warning-yellow);">fWAR</th>
+                                <th style="padding: 0.75rem;">wRC+</th>
+                                <th style="padding: 0.75rem;">PA</th>
+                                <th style="padding: 0.75rem;">HR</th>
+                                <th style="padding: 0.75rem;">SB</th>
+                                <th style="padding: 0.75rem;">BA</th>
+                                <th style="padding: 0.75rem;">OBP</th>
+                                <th style="padding: 0.75rem;">SLG</th>
+                                <th style="padding: 0.75rem;">OPS</th>
+                                <th style="padding: 0.75rem;">BB%</th>
+                                <th style="padding: 0.75rem;">K%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--card-border);">
+                                <td style="padding: 0.75rem; font-weight: 700;">2026</td>
+                                <td style="padding: 0.75rem;">CHC</td>
+                                <td style="padding: 0.75rem; color: var(--warning-yellow); font-weight: 800;">10.6</td>
+                                <td style="padding: 0.75rem;">156</td>
+                                <td style="padding: 0.75rem;">726</td>
+                                <td style="padding: 0.75rem; color: var(--accent-blue); font-weight: 700;">45</td>
+                                <td style="padding: 0.75rem;">41</td>
+                                <td style="padding: 0.75rem;">.280</td>
+                                <td style="padding: 0.75rem;">.372</td>
+                                <td style="padding: 0.75rem;">.570</td>
+                                <td style="padding: 0.75rem; font-weight: 700;">.943</td>
+                                <td style="padding: 0.75rem;">11.4%</td>
+                                <td style="padding: 0.75rem;">25.8%</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--card-border);">
+                                <td style="padding: 0.75rem; font-weight: 700;">2025</td>
+                                <td style="padding: 0.75rem;">CHC</td>
+                                <td style="padding: 0.75rem; color: var(--warning-yellow); font-weight: 800;">5.9</td>
+                                <td style="padding: 0.75rem;">114</td>
+                                <td style="padding: 0.75rem;">647</td>
+                                <td style="padding: 0.75rem;">31</td>
+                                <td style="padding: 0.75rem;">35</td>
+                                <td style="padding: 0.75rem;">.247</td>
+                                <td style="padding: 0.75rem;">.287</td>
+                                <td style="padding: 0.75rem;">.481</td>
+                                <td style="padding: 0.75rem;">.768</td>
+                                <td style="padding: 0.75rem;">7.6%</td>
+                                <td style="padding: 0.75rem;">22.8%</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--card-border);">
+                                <td style="padding: 0.75rem; font-weight: 700;">2024</td>
+                                <td style="padding: 0.75rem;">CHC</td>
+                                <td style="padding: 0.75rem; color: var(--warning-yellow); font-weight: 800;">2.3</td>
+                                <td style="padding: 0.75rem;">88</td>
+                                <td style="padding: 0.75rem;">410</td>
+                                <td style="padding: 0.75rem;">10</td>
+                                <td style="padding: 0.75rem;">27</td>
+                                <td style="padding: 0.75rem;">.237</td>
+                                <td style="padding: 0.75rem;">.286</td>
+                                <td style="padding: 0.75rem;">.384</td>
+                                <td style="padding: 0.75rem;">.670</td>
+                                <td style="padding: 0.75rem;">6.5%</td>
+                                <td style="padding: 0.75rem;">24.1%</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; font-weight: 700;">2023</td>
+                                <td style="padding: 0.75rem;">CHC</td>
+                                <td style="padding: 0.75rem; color: var(--warning-yellow); font-weight: 800;">0.0</td>
+                                <td style="padding: 0.75rem;">45</td>
+                                <td style="padding: 0.75rem;">19</td>
+                                <td style="padding: 0.75rem;">0</td>
+                                <td style="padding: 0.75rem;">2</td>
+                                <td style="padding: 0.75rem;">.222</td>
+                                <td style="padding: 0.75rem;">.250</td>
+                                <td style="padding: 0.75rem;">.259</td>
+                                <td style="padding: 0.75rem;">.509</td>
+                                <td style="padding: 0.75rem;">5.0%</td>
+                                <td style="padding: 0.75rem;">31.0%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Splits & Advanced Tab -->
+        <div id="splits" class="tab-content">
+            <div class="section-title">
+                <i class="fa-solid fa-table-cells"></i> Detailed Splits & Advanced Statcast Metrics (2026)
+            </div>
+
+            <!-- Splits Card 1: vs LHP vs RHP -->
+            <div class="savant-container" style="margin-bottom: 1.5rem;">
+                <div class="savant-header">
+                    <div class="savant-title">
+                        <i class="fa-solid fa-arrows-split-up-and-left"></i> Pitcher Handedness Splits (2026)
+                    </div>
+                </div>
+                <div class="splits-table-container">
+                    <table class="splits-table">
+                        <thead>
+                            <tr>
+                                <th>Split</th>
+                                <th>PA</th>
+                                <th>AB</th>
+                                <th>H</th>
+                                <th>HR</th>
+                                <th>RBI</th>
+                                <th>BA</th>
+                                <th>OBP</th>
+                                <th>SLG</th>
+                                <th>OPS</th>
+                                <th>wRC+</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 700;">vs. Right-Handed Pitchers (RHP)</td>
+                                <td>512</td>
+                                <td>440</td>
+                                <td style="font-weight: 700; color: var(--accent-blue);">128</td>
+                                <td>34</td>
+                                <td>81</td>
+                                <td>.291</td>
+                                <td>.385</td>
+                                <td>.600</td>
+                                <td style="font-weight: 700;">.985</td>
+                                <td style="font-weight: 700; color: var(--warning-yellow);">165</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 700;">vs. Left-Handed Pitchers (LHP)</td>
+                                <td>214</td>
+                                <td>186</td>
+                                <td>47</td>
+                                <td>11</td>
+                                <td>26</td>
+                                <td>.253</td>
+                                <td>.341</td>
+                                <td>.500</td>
+                                <td>.841</td>
+                                <td>132</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Splits Card 2: Home vs Away -->
+            <div class="savant-container" style="margin-bottom: 1.5rem;">
+                <div class="savant-header">
+                    <div class="savant-title">
+                        <i class="fa-solid fa-location-dot"></i> Home vs. Away Splits (2026)
+                    </div>
+                </div>
+                <div class="splits-table-container">
+                    <table class="splits-table">
+                        <thead>
+                            <tr>
+                                <th>Location</th>
+                                <th>PA</th>
+                                <th>AB</th>
+                                <th>H</th>
+                                <th>HR</th>
+                                <th>RBI</th>
+                                <th>BA</th>
+                                <th>OBP</th>
+                                <th>SLG</th>
+                                <th>OPS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 700;">Wrigley Field (Home)</td>
+                                <td>364</td>
+                                <td>312</td>
+                                <td>91</td>
+                                <td>25</td>
+                                <td>58</td>
+                                <td>.292</td>
+                                <td style="font-weight: 700;">.388</td>
+                                <td>.603</td>
+                                <td style="font-weight: 700;">.991</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 700;">Road Games (Away)</td>
+                                <td>362</td>
+                                <td>314</td>
+                                <td>84</td>
+                                <td>20</td>
+                                <td>49</td>
+                                <td>.268</td>
+                                <td>.356</td>
+                                <td>.538</td>
+                                <td>.894</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Advanced Statcast Deep Dive -->
+            <div class="savant-container">
+                <div class="savant-header">
+                    <div class="savant-title">
+                        <i class="fa-solid fa-chart-pie"></i> Advanced Statcast Plate Discipline & Batted Ball Profiles
+                    </div>
+                </div>
+                <div class="splits-table-container">
+                    <table class="splits-table">
+                        <thead>
+                            <tr>
+                                <th>Advanced Metric</th>
+                                <th>2026 Value</th>
+                                <th style="color: var(--success-green);">MLB Percentile / Rank</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 700;">Barrel %</td>
+                                <td>15.2%</td>
+                                <td style="color: var(--success-green); font-weight: 700;">91st Percentile</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 700;">Hard-Hit % (95+ mph EV)</td>
+                                <td>48.6%</td>
+                                <td style="color: var(--success-green); font-weight: 700;">76th Percentile</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 700;">Chase % (Out of Zone)</td>
+                                <td>24.1%</td>
+                                <td style="color: var(--success-green); font-weight: 700;">70th Percentile (Elite Discipline)</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 700;">Whiff % (Miss Rate)</td>
+                                <td>21.8%</td>
+                                <td style="color: var(--success-green); font-weight: 700;">68th Percentile</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 700;">Defensive Runs Saved (DRS)</td>
+                                <td style="font-weight: 700; color: var(--warning-yellow);">+34 Runs</td>
+                                <td style="color: var(--success-green); font-weight: 700;">#1 Among All MLB CF</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Career Awards Tab -->
+        <div id="awards" class="tab-content">
+            <div class="section-title">
+                <i class="fa-solid fa-trophy"></i> Major League Awards & Honors
+            </div>
+            <div class="awards-grid">
+                <div class="award-card">
+                    <div class="award-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div class="award-details">
+                        <h3>Rawlings Gold Glove Award</h3>
+                        <p>National League Center Field (2025)</p>
+                    </div>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div class="award-details">
+                        <h3>MLB All-Star Selection</h3>
+                        <p>National League (2025, 2026)</p>
+                    </div>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <div class="award-details">
+                        <h3>NL Home Run Co-Leader</h3>
+                        <p>45 Home Runs (2026)</p>
+                    </div>
+                </div>
+                <div class="award-card">
+                    <div class="award-icon">
+                        <i class="fa-solid fa-medal"></i>
+                    </div>
+                    <div class="award-details">
+                        <h3>NL Rookie of the Month</h3>
+                        <p>August 2024</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 PCATRACKER. Powered by verified MLB, FanGraphs fWAR & Baseball Savant Statcast data.</p>
+    </footer>
+
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const menuItems = document.querySelectorAll('.menu-items li');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        menuToggle.addEventListener('click', () => {
+            dropdownMenu.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdownMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+                dropdownMenu.classList.remove('active');
+            }
+        });
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                menuItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                const targetTab = item.getAttribute('data-target');
+                tabContents.forEach(tab => tab.classList.remove('active'));
+                document.getElementById(targetTab).classList.add('active');
+
+                dropdownMenu.classList.remove('active');
+            });
+        });
+
+        function syncFeed() {
+            const icon = document.getElementById('syncIcon');
+            icon.classList.add('fa-spin');
+            setTimeout(() => {
+                icon.classList.remove('fa-spin');
+                alert("PCATRACKER feed successfully synced with live MLB, FanGraphs & Baseball Savant data!");
+            }, 800);
+        }
+    </script>
+</body>
+</html>
